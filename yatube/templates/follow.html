@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Последние обновления у авторов{% endblock %}
+{% block header %}Последние обновления у авторов{% endblock %}
+{% block content %}
+
+
+  {% include "includes/menu.html" %}
+
+
+    <div class="container">
+      <!-- Вывод ленты записей -->
+      {% for post in page %}
+      <!-- Вот он, новый include! -->
+      {% include "includes/post_item.html" with post=post %}
+      {% endfor %}
+    </div>
+  
+  
+  <p>
+  {% include "includes/paginator.html" %}
+  </p>
+
+
+{% endblock %}
