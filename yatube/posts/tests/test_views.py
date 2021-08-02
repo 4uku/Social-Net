@@ -1,6 +1,5 @@
 import shutil
 import tempfile
-from yatube.posts.models import Follow
 
 from django import forms
 from django.conf import settings
@@ -10,7 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from posts.models import Group, Post
+from posts.models import Follow, Group, Post
 
 User = get_user_model()
 
@@ -166,10 +165,6 @@ class PagesTest(TestCase):
         count_after_create = Post.objects.count()
         self.assertEqual(len(response.context["page"]), count_after_create)
 
-    def test_dich(self):
-        response = self.authoriized_client.get(reverse("index"))
-        print(response.request)
-
 
 class PaginatorViewsTest(TestCase):
     @classmethod
@@ -230,13 +225,30 @@ class FollowTest(TestCase):
         super().setUp()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
-        self.guest_clien = Client()
 
     def test_authorized_user_can_follow(self):
-        """Тестирование подписки для пользователя"""
+        """Тестирование подписки/отписки для пользователя"""
         follows_count = Follow.objects.count()
         self.authorized_client.get(
             reverse("profile_follow",
                     kwargs={"username": self.author.username})
         )
         self.assertEqual(Follow.objects.count(), follows_count + 1)
+        self.authorized_client.get(
+            reverse("profile_unfollow",
+                    kwargs={"username": self.author.username})
+        )
+        self.assertEqual(Follow.objects.count(), follows_count)
+
+    def test_post_on_follow_page(self):
+        """Тестирование поста на странице подписок"""
+        response = self.authorized_client.get(reverse("follow_index"))
+        posts_before_follow = len(response.context["page"])
+        self.assertEqual(posts_before_follow, 0)
+        self.authorized_client.get(
+            reverse("profile_follow",
+                    kwargs={"username": self.author.username})
+        )
+        response = self.authorized_client.get(reverse("follow_index"))
+        posts_after_follow = len(response.context["page"])
+        self.assertEqual(posts_after_follow, 1)

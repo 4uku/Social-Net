@@ -104,3 +104,48 @@ class PostFormTest(TestCase):
             302,
             200
         )
+
+
+class CommentFormTest(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = User.objects.create_user(username="user")
+        cls.post = Post.objects.create(
+            text="test text",
+            author=cls.user
+        )
+
+    def setUp(self):
+        super().setUp()
+        self.guest_client = Client()
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
+
+    def test_add_comment_for_user(self):
+        """Тестирование формы добавления комментария пользователем"""
+        comments_count = self.post.comments.count()
+        self.authorized_client.post(
+            reverse("add_comment", kwargs={"username": self.user.username,
+                                           "post_id": self.post.id}),
+            data={"text": "test comment"}, follow=True
+        )
+        self.assertEqual(self.post.comments.count(), comments_count + 1)
+
+    def test_add_comment_for_anonymouse(self):
+        """Тестирование недоступности формы комментария для анонима"""
+        comments_count = self.post.comments.count()
+        response = self.guest_client.post(
+            reverse("add_comment", kwargs={"username": self.user.username,
+                                           "post_id": self.post.id}),
+            data={"text": "test comment"}, follow=True
+        )
+        self.assertEqual(self.post.comments.count(), comments_count)
+        self.assertRedirects(
+            response,
+            (reverse("login") + "?next=" + reverse(
+                "add_comment", kwargs={"username": self.user.username,
+                                       "post_id": self.post.id})),
+            302,
+            200
+        )

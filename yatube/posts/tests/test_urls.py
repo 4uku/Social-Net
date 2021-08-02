@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import Client, TestCase
 
 from posts.models import Group, Post
@@ -29,15 +30,17 @@ class StaticURLTests(TestCase):
         self.viewer_client = Client()
         self.viewer_client.force_login(self.viewer)
         self.urls = {
-            "homepage": "/",
+            "homepage": "",
             "group_page": f"/group/{self.group.slug}/",
             "new_page": "/new/",
             "profile_page": f"/{self.user.username}/",
             "post_view_page": f"/{self.user.username}/{self.post.id}/",
             "post_edit_page": f"/{self.user.username}/{self.post.id}/edit/",
+            "not_found_page": "/fjgjsg/"
         }
+        cache.clear()
 
-    def test_pages_for_anonymouse(self):
+    def test_pages_for_response(self):
         """Тестирование доступности страниц"""
         all_variants = [
             (self.urls["homepage"], 200, self.guest_client),
@@ -48,7 +51,8 @@ class StaticURLTests(TestCase):
             (self.urls["post_edit_page"], 302, self.guest_client),
             (self.urls["new_page"], 200, self.authoriized_client),
             (self.urls["post_edit_page"], 200, self.authoriized_client),
-            (self.urls["post_edit_page"], 302, self.viewer_client)
+            (self.urls["post_edit_page"], 302, self.viewer_client),
+            (self.urls["not_found_page"], 404, self.guest_client),
         ]
         for item in all_variants:
             url = item[0]

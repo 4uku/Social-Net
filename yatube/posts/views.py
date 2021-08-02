@@ -70,8 +70,9 @@ def profile(request, username):
     posts_count = post_list.count()
     page = paginator(request, post_list)
     following = None
-    if author.following.filter(user=request.user):
-        following = True
+    if request.user.is_authenticated:
+        if author.following.filter(user=request.user):
+            following = True
     else:
         following = False
     return render(request, "profile.html", {"author": author,
