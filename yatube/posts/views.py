@@ -130,7 +130,8 @@ def post_edit(request, username, post_id):
         return redirect("post", username=post.author, post_id=post.id)
     return render(request, "new_post.html", {"form": form,
                                              "header": header,
-                                             "button": button})
+                                             "button": button,
+                                             "post": post})
 
 
 @login_required
