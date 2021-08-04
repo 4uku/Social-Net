@@ -38,9 +38,9 @@ class PagesTest(TestCase):
             b'\x02\x4c\x01\x00\x3b'
         )
         cls.uploaded = SimpleUploadedFile(
-            name='small.gif',
+            name="small.gif",
             content=cls.small_gif,
-            content_type='image/gif'
+            content_type="image/gif"
         )
         cls.post = Post.objects.create(
             text="test text",
@@ -223,19 +223,34 @@ class FollowTest(TestCase):
 
     def setUp(self):
         super().setUp()
+        self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
     def test_authorized_user_can_follow(self):
-        """Тестирование подписки/отписки для пользователя"""
+        """Тестирование подписки для пользователя"""
         follows_count = Follow.objects.count()
         self.authorized_client.get(
             reverse("profile_follow",
                     kwargs={"username": self.author.username})
         )
         self.assertEqual(Follow.objects.count(), follows_count + 1)
+
+    def test_authorized_user_can_unfollow(self):
+        """Тестирование отписки для пользователя"""
+        Follow.objects.get_or_create(user=self.user, author=self.author)
+        follows_count = Follow.objects.count()
         self.authorized_client.get(
             reverse("profile_unfollow",
+                    kwargs={"username": self.author.username})
+        )
+        self.assertEqual(Follow.objects.count(), follows_count - 1)
+
+    def test_anonymouse_cant_follow(self):
+        """Тестировавниие подписки для анонима"""
+        follows_count = Follow.objects.count()
+        self.guest_client.get(
+            reverse("profile_follow",
                     kwargs={"username": self.author.username})
         )
         self.assertEqual(Follow.objects.count(), follows_count)

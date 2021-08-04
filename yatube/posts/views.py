@@ -27,11 +27,7 @@ def index(request):
 
 @login_required
 def follow_index(request):
-    user_follower = request.user.follower.all()
-    authors_list = []
-    for follow in user_follower:
-        authors_list.append(follow.author)
-    post_list = Post.objects.all().filter(author__in=authors_list)
+    post_list = Post.objects.filter(author__following__user=request.user)
     page = paginator(request, post_list)
     return render(request, "follow.html", {"page": page, })
 
@@ -42,7 +38,8 @@ def profile_follow(request, username):
     if ((request.user != author)
        and not Follow.objects.filter(author=author,
                                      user=request.user).exists()):
-        Follow.objects.create(author_id=author.id, user_id=request.user.id)
+        Follow.objects.get_or_create(author_id=author.id,
+                                     user_id=request.user.id)
     return redirect("profile", username)
 
 
@@ -75,11 +72,18 @@ def profile(request, username):
             following = True
     else:
         following = False
-    return render(request, "profile.html", {"author": author,
-                                            "count": posts_count,
-                                            "page": page,
-                                            "following": following,
-                                            })
+    author_follower = author.follower.count()
+    author_following = author.following.count()
+    return render(
+        request,
+        "profile.html",
+        {"author": author,
+         "count": posts_count,
+         "page": page,
+         "following": following,
+         "author_follower": author_follower,
+         "author_following": author_following, }
+    )
 
 
 def post_view(request, username, post_id):
