@@ -36,9 +36,9 @@ class PostFormTest(TestCase):
             b'\x02\x4c\x01\x00\x3b'
         )
         cls.uploaded = SimpleUploadedFile(
-            name='small.gif',
+            name="small.gif",
             content=cls.small_gif,
-            content_type='image/gif'
+            content_type="image/gif"
         )
 
     @classmethod
