@@ -47,8 +47,8 @@ class PostFormTest(TestCase):
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
-        self.authoriized_client = Client()
-        self.authoriized_client.force_login(PostFormTest.user)
+        self.authorized_client = Client()
+        self.authorized_client.force_login(PostFormTest.user)
 
     def test_new_post_create(self):
         """Тестирование формы создания поста"""
@@ -59,7 +59,7 @@ class PostFormTest(TestCase):
             "group": PostFormTest.group.id,
             "image": self.uploaded
         }
-        self.authoriized_client.post(
+        self.authorized_client.post(
             reverse("new_post"), data=post_data, follow=True
         )
         first_query_set = Post.objects.first()
@@ -67,13 +67,14 @@ class PostFormTest(TestCase):
         self.assertEqual(first_query_set.text, post_data["text"])
         self.assertEqual(first_query_set.group, PostFormTest.group)
         self.assertEqual(first_query_set.author, PostFormTest.user)
+        self.assertEqual(first_query_set.image.name, 'posts/small.gif')
 
     def test_post_edit_saving_changes(self):
         """Тестирование формы редактирования поста"""
         post_data = {
             "text": "test text"
         }
-        response = self.authoriized_client.post(
+        response = self.authorized_client.post(
             reverse("post_edit",
                     kwargs={"username": PostFormTest.user.username,
                             "post_id": PostFormTest.post.id}),
